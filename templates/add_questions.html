@@ -1,0 +1,72 @@
+{% extends 'app.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Add a New Question</h2>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-success">
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <form action="/add_questions" method="POST" class="card p-4 shadow-lg bg-light rounded">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            <label for="test_id">Select Test:</label>
+            <select name="test_id" id="test_id" class="form-control">
+                {% for test in tests %}
+                <option value="{{ test[0] }}">{{ test[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            {{ form.question_text.label(class="font-weight-bold") }}
+            {{ form.question_text(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.option_1.label(class="font-weight-bold") }}
+            {{ form.option_1(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.option_2.label(class="font-weight-bold") }}
+            {{ form.option_2(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.option_3.label(class="font-weight-bold") }}
+            {{ form.option_3(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.option_4.label(class="font-weight-bold") }}
+            {{ form.option_4(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.correct_option.label(class="font-weight-bold") }}
+            {{ form.correct_option(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.difficulty.label(class="font-weight-bold") }}
+            {{ form.difficulty(class="form-control") }}
+        </div>
+
+        <div class="text-center">
+            {{ form.submit(class="btn btn-primary mt-3") }}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

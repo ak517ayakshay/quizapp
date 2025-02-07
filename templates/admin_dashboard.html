@@ -1,0 +1,65 @@
+{% extends 'app.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Admin Dashboard</h2>
+    <button class="btn btn-primary" onclick="window.location.href='/dashboard'">Profile</button>
+
+    <div class="mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Buttons for Admin actions -->
+        <div class="row">
+            <div class="col-md-4">
+                <a href="/create_test" class="btn btn-primary btn-block mb-3">
+                    Create Test
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/add_questions" class="btn btn-success btn-block mb-3">
+                    Create Question
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/invite" class="btn btn-warning btn-block mb-3">
+                    Invite Participant
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <h2>Dashboard</h2>
+    
+    <h3>Pending Tests</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Total Questions Required</th>
+                <th>Questions Created</th>
+                <th>Questions Left</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test in pending_tests %}
+            <tr>
+                <td>{{ test[1] }}</td> <!-- Test Name -->
+                <td>{{ test[2] }}</td> <!-- Total Required Questions -->
+                <td>{{ test[3] }}</td> <!-- Questions Created -->
+                <td class="{% if test[4] == 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ test[4] }}  <!-- Questions Left -->
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

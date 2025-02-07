@@ -1,0 +1,63 @@
+{% extends 'app.html' %}
+{% block content %}
+
+<style>
+  .container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  h2 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 24px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul li {
+    background: #f8f9fa;
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+
+  .btn-dark {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: white;
+    background: #343a40;
+    border-radius: 5px;
+    transition: 0.3s;
+  }
+
+  .btn-dark:hover {
+    background: #23272b;
+  }
+</style>
+
+<div class="container">
+  <h2>Profile</h2>
+
+  {% if user %}
+    <p><strong>User Information</strong></p>
+    <ul>
+      <li><strong>Email:</strong> {{ user[1] }}</li>
+      <li><strong>Role:</strong> {{ user[3] }}</li>
+    </ul>
+    <a href="/logout" class="btn btn-dark">Logout</a>
+  {% endif %}
+</div>
+
+{% endblock %}

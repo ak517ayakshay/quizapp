@@ -1,0 +1,135 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Invite a Student to the Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+            display: block;
+        }
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        input[type="email"]:focus {
+            border-color: #4caf50;
+            outline: none;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Invite a Student to the Quiz</h1>
+        <form action="/invite" method="POST">
+            <div class="form-group">
+                <label for="email">Enter Student's Email:</label>
+                <input type="email" id="email" name="email" placeholder="student@example.com" required>
+            </div>
+            <button type="submit">Send Invitation</button>
+        </form>
+    </div>
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% extends 'app.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Invite User to Test</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('invite') }}" method="POST" class="mt-4">
+        <!-- Email Input -->
+        <div class="form-group">
+            <label for="email" class="form-label">User Email:</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="Enter user email" required>
+        </div>
+
+        <!-- Test Selection -->
+        <div class="form-group mt-3">
+            <label for="test_id" class="form-label">Select Test:</label>
+            <select name="test_id" id="test_id" class="form-control" required>
+                <option value="" disabled selected>Select a test</option>
+                {% for test in tests %}
+                    <option value="{{ test[0] }}">{{ test[1] }}</option>  <!-- test[0] is the test_id, test[1] is the test name -->
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-4">Send Invitation</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-4">Back to Profile</a>
+    </form>
+</div>
+{% endblock %}

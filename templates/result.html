@@ -1,0 +1,82 @@
+{% extends 'app.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">{{ test_name }} - Result</h2>
+
+    <div class="mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h4>Total Marks: {{ total_marks }} / {{ questions|length }}</h4>
+        <hr>
+
+        <div class="list-group mt-4">
+            {% for question in questions %}
+                <div class="list-group-item">
+                    <h5>Q: {{ question[1] }}</h5>  <!-- question_text -->
+                    
+                    <div class="form-check">
+                        <label class="form-check-label" for="option_1_{{ question[0] }}">
+                            {% if question[7] == 1 %}
+                                <span > ◯ {{ question[2] }} (Marked)</span>
+                            {% else %}
+                                <span > ◯ {{ question[2] }}</span>
+                            {% endif %}
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <label class="form-check-label" for="option_2_{{ question[0] }}">
+                            {% if question[7]== 2 %}
+                                <span > ◯ {{ question[3] }} (Marked)</span>
+                            {% else %}
+                                <span >◯ {{ question[3] }}</span>
+                            {% endif %}
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <label class="form-check-label" for="option_3_{{ question[0] }}">
+                            {% if question[7]== 3 %}
+                                <span >◯ {{ question[4] }} (Marked)</span>
+                            {% else %}
+                                <span >◯ {{ question[4] }}</span>
+                            {% endif %}
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <label class="form-check-label" for="option_4_{{ question[0] }}">
+                            {% if question[7]== 4 %}
+                                <span > ◯ {{ question[5] }} (Marked)</span>
+                            {% else %}
+                                <span > ◯ {{ question[5] }}</span>
+                            {% endif %}
+                        </label>
+                    </div>
+
+                    <div class="mt-2">
+                        <strong>Correct Answer:</strong>
+                        {% if question[6]|int == 1 %}
+                            <span class="text-success">{{ question[2] }}</span>  
+                        {% elif question[6]|int == 2 %}
+                            <span class="text-success">{{ question[3] }}</span>  
+                        {% elif question[6]|int == 3 %}
+                            <span class="text-success">{{ question[4] }}</span> 
+                        {% elif question[6]|int == 4 %}
+                            <span class="text-success">{{ question[5] }}</span>  
+                        {% endif %}
+                    </div>
+
+                    
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

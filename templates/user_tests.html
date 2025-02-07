@@ -1,0 +1,46 @@
+{% extends 'app.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Your Tests</h2>
+    <button class="btn btn-primary" onclick="window.location.href='/dashboard'">Profile</button>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% if user_tests %}
+        <div class="row">
+            {% for test in user_tests %}
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ test[1] }}</h5>
+                            <p class="card-text"><strong>Status:</strong> {{ test[2] }}</p>
+                            <p class="card-text"><strong>Test ID:</strong> {{ test[0] }}</p>
+                            
+                            {% if test[2] == 'Complete' %}
+                                <!-- If the test is completed, show 'View Result' -->
+                                <a href="/result/{{ test[0] }}" class="btn btn-primary">View Result</a>
+                            {% else %}
+                                <!-- If the test is not completed, show 'Start Test' -->
+                                <a href="/test/{{ test[0] }}" class="btn btn-primary">Start Test</a>
+                            {% endif %}
+
+
+                                                      
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center mt-4">
+            No tests available for this user.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
