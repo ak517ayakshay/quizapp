@@ -2,6 +2,15 @@
 
 This document outlines the architecture for the unified agentic framework using Google's Agent Development Kit (ADK) with a YAML-first approach.
 
+## Key Principle: Leverage ADK Native Capabilities
+
+**Important**: Google's ADK natively supports YAML-based agent definitions. This architecture leverages ADK's built-in capabilities rather than creating a custom abstraction layer. Our framework layer (`framework/`) serves only as:
+- **Organization**: Structured crew and tool discovery
+- **Registry**: Centralized tool catalog to prevent duplication
+- **Convenience**: Simplified crew execution commands
+
+The actual agent orchestration, tool binding, and execution are handled by ADK's native runtime.
+
 ## Architecture Flowchart
 
 The following diagram illustrates how the unified Medulla Framework orchestrates different crews (Archimedes, Dataflow Monitor, SOAP Crew) using a shared Tool Registry and a common ADK Runtime.
@@ -76,7 +85,11 @@ medulla/
 │   ├── ask_alyf/
 │   │   └── root.yaml               # Single agent or simple crew for Q&A
 │   │
-│   ├── dataflow_monitor/           # Distinct Crew: Monitors System Health
+│   ├── ros/                        # Distinct Crew: Connection Diagnosis
+│   │   ├── root.yaml               # Main orchestrator for diagnosis
+│   │   └── agents.yaml             # Diagnostic sub-agents
+│   │
+│   ├── dataflow_monitor/           # Distinct Crew: Connection diagnostic
 │   │   └── root.yaml
 │   │
 │   └── soap_crew/                  # Distinct Crew: Generates Clinical Notes
@@ -104,62 +117,119 @@ medulla/
 
 ## Configuration Types & Schema Details
 
-The framework relies on two primary configuration file types: `root.yaml` and `agents.yaml`.
+**Important**: The YAML configuration files follow Google ADK's official YAML syntax and structure. The framework's loader parses ADK-compliant YAML configurations to instantiate agents programmatically.
+
+The framework uses two primary configuration file types: `root.yaml` and `agents.yaml`.
 
 ### 1. Root Configuration (`root.yaml`)
-Defines the entry point for a crew. It specifies the high-level architecture (e.g., single agent vs. hierarchical orchestrator).
+Defines the entry point for a crew following ADK's agent configuration format. For orchestrator crews, this defines the supervisor agent that coordinates sub-agents.
 
-**Schema:**
-*   `name` (string): Unique identifier for the crew (e.g., "archimedes_v2").
-*   `type` (enum): The architectural pattern.
-    *   `orchestrator`: A supervisor manages sub-agents.
-    *   `router`: Routes queries to specific sub-agents without supervision.
-    *   `single`: A standalone agent.
-*   `supervisor` (object, optional): Defines the managing agent (if type is `orchestrator`).
-    *   `model`: The LLM model ID (e.g., `gemini-1.5-pro`).
-    *   `instruction`: High-level system prompt for coordination.
-*   `sub_agents` (list): List of references to agents defined in `agents.yaml`.
+**ADK-Compliant Schema:**
+*   `name` (string): Unique identifier for the crew/agent (e.g., "archimedes_crew").
+*   `model` (string): The LLM model ID (e.g., `gemini-1.5-pro`).
+*   `description` (string): Brief description of the crew's purpose.
+*   `instruction` (string): System prompt for the orchestrator/supervisor.
+*   `sub_agents` (list, optional): References to agent definitions in `agents.yaml`.
+*   `tools` (list, optional): Tools available to the orchestrator.
 
-**Example:**
+**Example (Orchestrator Crew):**
 ```yaml
 name: "archimedes_crew"
-type: "orchestrator"
-supervisor:
-  model: "gemini-1.5-pro"
-  instruction: "You are the Chief Medical Officer. Delegate patient queries to the appropriate specialist."
+model: "gemini-1.5-pro"
+description: "Multi-specialist clinical consultation orchestrator"
+instruction: |
+  You are the Chief Medical Officer. Delegate patient queries to the appropriate specialist.
+  Coordinate responses from cardiology, sleep, and pulmonary specialists.
 sub_agents:
   - $ref: "./agents.yaml#/cardiology_agent"
   - $ref: "./agents.yaml#/sleep_agent"
+  - $ref: "./agents.yaml#/pulmonary_agent"
+```
+
+**Example (Single Agent Crew):**
+```yaml
+name: "dataflow_monitor"
+model: "gemini-1.5-flash"
+description: "System health monitoring agent"
+instruction: |
+  You monitor data pipeline health. Check for stuck jobs, latency issues, and system errors.
+tools:
+  - name: "check_pipeline_status"
+  - name: "get_job_metrics"
 ```
 
 ### 2. Agent Definitions (`agents.yaml`)
-Defines the reusable worker agents. These can be referenced by multiple crews if needed.
+Defines reusable worker agents following ADK's agent configuration syntax. Each agent entry follows ADK's standard format.
 
-**Schema:**
+**ADK-Compliant Schema:**
 *   `[agent_key]` (object): The unique key for the agent (e.g., `cardiology_agent`).
-    *   `model` (string): The LLM model to use.
-    *   `description` (string): Short description for the orchestrator to understand the agent's role.
+    *   `name` (string): Agent identifier (optional, defaults to key).
+    *   `model` (string): The LLM model to use (e.g., `gemini-1.5-pro`).
+    *   `description` (string): Short description of the agent's role.
     *   `instruction` (string): The detailed system prompt (persona).
-    *   `tools` (list of strings): Exact names of tools from the `tools/` registry this agent can access.
+    *   `tools` (list): List of tool references. Each tool can be:
+        *   A string: Tool name from the registry (e.g., `"get_heart_rate"`).
+        *   An object: `{ name: "tool_name" }` for ADK compatibility.
 
 **Example:**
 ```yaml
 cardiology_agent:
+  name: "cardiology_specialist"
   model: "gemini-1.5-pro"
   description: "Cardiology Specialist"
   instruction: |
     You are a cardiologist. Your goal is to analyze heart rate, BP, and ECG data.
     Always cite the timestamp of the vital sign in your analysis.
   tools:
-    - "get_heart_rate_series"
-    - "get_blood_pressure_latest"
-    - "calculate_hrv_trends"
+    - name: "get_heart_rate_series"
+    - name: "get_blood_pressure_latest"
+    - name: "calculate_hrv_trends"
 
 soap_scribe_agent:
+  name: "soap_scribe"
   model: "gemini-1.5-flash"
   description: "Medical Scribe"
   instruction: "Convert the clinical conversation into a structured SOAP note."
   tools:
-    - "format_soap_section"
+    - name: "format_soap_section"
 ```
 
+## Tool Registry Design
+
+The `tools/registry.py` serves as the **single source of truth** for all available tools across all crews. This prevents duplication and ensures consistency.
+
+**Registry Structure:**
+```python
+# tools/registry.py
+from tools.vitals.getters import get_member_vitals_data, get_heart_rate_series
+from tools.clinical.events import get_clinical_events
+from tools.monitoring.pipeline_checks import check_dataflow_status
+from tools.documentation.soap_generators import generate_soap_section
+
+# Global registry mapping tool names to implementations
+TOOL_REGISTRY = {
+    # Vitals Tools
+    "get_member_vitals_data": get_member_vitals_data,
+    "get_heart_rate_series": get_heart_rate_series,
+    "get_blood_pressure_latest": get_blood_pressure_latest,
+    
+    # Clinical Tools
+    "get_clinical_events": get_clinical_events,
+    "get_diagnosis_history": get_diagnosis_history,
+    
+    # Monitoring Tools
+    "check_dataflow_status": check_dataflow_status,
+    
+    # Documentation Tools
+    "generate_soap_section": generate_soap_section,
+}
+## Workflow Implementation
+
+1.  **Create Tools**: Implement pure Python functions in `tools/`.
+2.  **Register Tools**: Add them to `tools/registry.py` so the framework can find them by string name.
+3.  **Compose Agents**: Create `crews/<crew_name>/agents.yaml` to define personas and assign tools.
+4.  **Define Structure**: Create `crews/<crew_name>/root.yaml` to set up the orchestration.
+5.  **Execute**: Run the generic loader:
+    ```bash
+    python -m framework.runner --crew dataflow_monitor
+    ```
